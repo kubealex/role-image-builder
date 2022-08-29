@@ -1,0 +1,41 @@
+---
+- name: Register system with Red Hat Subscription Manager
+  community.general.redhat_subscription:
+    state: present
+    username: "{{ rhsm_user }}"
+    password: "{{ rhsm_password }}"
+    pool_ids: "{{ rhsm_pool_id | default(omit, true) }}"
+
+- name: Ensure all packages are updated
+  ansible.builtin.dnf:
+    name: '*'
+    state: latest # noqa package-latest
+
+- name: Install required packages
+  ansible.builtin.dnf:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - osbuild-composer
+      - composer-cli
+      - cockpit-composer
+      - bash-completion
+
+- name: Enable required services
+  ansible.builtin.service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - osbuild-composer.socket
+    - cockpit.socket
+
+- name: Enable required ports on firewalld
+  ansible.posix.firewalld:
+    service: cockpit
+    state: enabled
+    permanent: true
+
+- name: Reboot the system
+  ansible.builtin.reboot:

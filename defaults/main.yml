@@ -1,0 +1,5 @@
+---
+# defaults file for role-image-builder
+rhsm_user:
+rhsm_password:
+rhsm_pool_id:
